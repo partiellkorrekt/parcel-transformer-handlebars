@@ -1,6 +1,6 @@
 {
   "name": "@partiellkorrekt/parcel-transformer-handlebars",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Handlebars Tranformer Plugin for Parcel",
   "main": "lib/HandlebarsTransformer.js",
   "author": "Abraham Przewodnik",
@@ -9,7 +9,8 @@
     "url": "https://github.com/partiellkorrekt/parcel-transformer-handlebars"
   },
   "scripts": {
-    "start": "npx tsc --watch"
+    "start": "npx tsc --watch",
+    "build": "npx tsc"
   },
   "engines": {
     "node": ">= 12.0.0",

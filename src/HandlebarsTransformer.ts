@@ -9,11 +9,26 @@ import frontMatter from 'front-matter'
 import glob from 'glob'
 
 type HandlebarsConfig = {
-  layouts?: string,
-  partials?: string,
-  helpers?: string,
-  data?: string,
-  decorators?: string
+  layouts: string | string[],
+  partials: string | string[],
+  helpers: string | string[],
+  data: string | string[],
+  decorators: string | string[]
+}
+
+const defaultConfig: HandlebarsConfig = {
+  data: 'src/markup/data',
+  decorators: 'src/markup/decorators',
+  helpers: 'src/markup/helpers',
+  layouts: 'src/markup/layouts',
+  partials: 'src/markup/partials'
+}
+
+function toArray<T>(value: T | T[] | undefined) {
+  if (typeof value === 'undefined') {
+    return []
+  }
+  return Array.isArray(value) ? value : [value]
 }
 
 const parseSimpleLayout = (str: string, opts: HandlebarsConfig) => {
@@ -21,24 +36,17 @@ const parseSimpleLayout = (str: string, opts: HandlebarsConfig) => {
   const matches = str.match(layoutPattern);
 
   if (matches) {
-    let layout = matches[1];
+    const layout = matches[1];
 
-    if (opts.layouts && layout[0] !== '.') {
-      layout = path.resolve(opts.layouts, layout);
-    }
-
-    const hbsLayout = path.resolve(process.cwd(), `${layout}.hbs`);
-
-    if (fs.existsSync(hbsLayout)) {
-      const content = fs.readFileSync(hbsLayout, { encoding: 'utf-8' });
-      return { dependencies: [hbsLayout], content: content.replace('{{{body}}}', str) };
-    }
-
-    const handlebarsLayout = hbsLayout.replace('.hbs', '.handlebars');
-
-    if (fs.existsSync(handlebarsLayout)) {
-      const content = fs.readFileSync(handlebarsLayout, { encoding: 'utf-8' });
-      return { dependencies: [handlebarsLayout], content: content.replace('{{{body}}}', str) };
+    for (const layoutPath of toArray(opts.layouts)) {
+      const filenameBase = path.resolve(layoutPath, layout)
+      for (const ext of ['.hbs', '.handlebars']) {
+        const filename = filenameBase + ext
+        if (fs.existsSync(filename)) {
+          const content = fs.readFileSync(filename, { encoding: 'utf-8' });
+          return { dependencies: [filename], content: content.replace('{{{body}}}', str) };
+        }
+      }
     }
   }
 
@@ -60,37 +68,32 @@ export default (new Transformer<HandlebarsConfig>({
         config.invalidateOnStartup()
       }
 
-      return (configFile.contents ?? {}) as HandlebarsConfig
+      return {
+        ...defaultConfig,
+        ...configFile.contents as Partial<HandlebarsConfig>
+      }
     }
 
-    return {}
+    return defaultConfig
   },
 
   async transform({asset, config}) {
     const wax = handlebarsWax(Handlebars)
     wax.helpers(handlebarsLayouts)
     wax.helpers(handlebarsHelpers)
-    const dependencies: string[] = []
-    if (config.helpers) {
-      dependencies.push(...glob.sync(`${config.helpers}/**/*.js`))
-      wax.helpers(`${config.helpers}/**/*.js`)
-    }
-    if (config.data) {
-      dependencies.push(...glob.sync(`${config.data}/**/*.{json,js}`))
-      wax.data(`${config.data}/**/*.{json,js}`)
-    }
-    if (config.decorators) {
-      dependencies.push(...glob.sync(`${config.decorators}/**/*.js`))
-      wax.decorators(`${config.decorators}/**/*.js`)
-    }
-    if (config.layouts) {
-      dependencies.push(...glob.sync(`${config.layouts}/**/*.{hbs,handlebars,js}`))
-      wax.partials(`${config.layouts}/**/*.{hbs,handlebars,js}`)
-    }
-    if (config.partials) {
-      dependencies.push(...glob.sync(`${config.partials}/**/*.{hbs,handlebars,js}`))
-      wax.partials(`${config.partials}/**/*.{hbs,handlebars,js}`);
-    }
+    toArray(config.helpers).map(x => wax.helpers(`${x}/**/*.js`))
+    toArray(config.data).map(x => wax.data(`${x}/**/*.{json,js}`))
+    toArray(config.decorators).map(x => wax.decorators(`${x}/**/*.js`))
+    toArray(config.layouts).map(x => wax.partials(`${x}/**/*.{hbs,handlebars,js}`))
+    toArray(config.partials).map(x => wax.partials(`${x}/**/*.{hbs,handlebars,js}`))
+
+    const dependencies: string[] = [
+      toArray(config.helpers).map(x => `${x}/**/*.js`),
+      toArray(config.data).map(x => `${x}/**/*.{json,js}`),
+      toArray(config.decorators).map(x => `${x}/**/*.js`),
+      toArray(config.layouts).map(x => `${x}/**/*.{hbs,handlebars,js}`),
+      toArray(config.partials).map(x => `${x}/**/*.{hbs,handlebars,js}`)
+    ].flat().map(g => glob.sync(g)).flat()
 
     const code = await asset.getCode()
 

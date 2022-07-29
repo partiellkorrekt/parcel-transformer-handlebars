@@ -6,6 +6,7 @@ import handlebarsWax from 'handlebars-wax'
 import handlebarsLayouts from 'handlebars-layouts'
 import handlebarsHelpers from 'handlebars-helpers'
 import frontMatter from 'front-matter'
+import glob from 'glob'
 
 type HandlebarsConfig = {
   layouts?: string,
@@ -69,19 +70,25 @@ export default (new Transformer<HandlebarsConfig>({
     const wax = handlebarsWax(Handlebars)
     wax.helpers(handlebarsLayouts)
     wax.helpers(handlebarsHelpers)
+    const dependencies: string[] = []
     if (config.helpers) {
+      dependencies.push(...glob.sync(`${config.helpers}/**/*.js`))
       wax.helpers(`${config.helpers}/**/*.js`)
     }
     if (config.data) {
+      dependencies.push(...glob.sync(`${config.data}/**/*.{json,js}`))
       wax.data(`${config.data}/**/*.{json,js}`)
     }
     if (config.decorators) {
+      dependencies.push(...glob.sync(`${config.decorators}/**/*.js`))
       wax.decorators(`${config.decorators}/**/*.js`)
     }
     if (config.layouts) {
+      dependencies.push(...glob.sync(`${config.layouts}/**/*.{hbs,handlebars,js}`))
       wax.partials(`${config.layouts}/**/*.{hbs,handlebars,js}`)
     }
     if (config.partials) {
+      dependencies.push(...glob.sync(`${config.partials}/**/*.{hbs,handlebars,js}`))
       wax.partials(`${config.partials}/**/*.{hbs,handlebars,js}`);
     }
 
@@ -91,7 +98,8 @@ export default (new Transformer<HandlebarsConfig>({
     const frontmatter = frontMatter(code)
 
     // process simple layout mapping that does not use handlebars-layouts. i.e {{!< base}}
-    const { dependencies, content } = parseSimpleLayout(frontmatter.body, config);
+    const { dependencies: layoutDeps, content } = parseSimpleLayout(frontmatter.body, config);
+    dependencies.push(...layoutDeps)
 
     for (const dep of dependencies) {
       asset.invalidateOnFileChange(dep)

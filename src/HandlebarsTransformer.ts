@@ -79,8 +79,8 @@ export default (new Transformer<HandlebarsConfig>({
 
   async transform({asset, config}) {
     const wax = handlebarsWax(Handlebars)
-    wax.helpers(handlebarsLayouts)
     wax.helpers(handlebarsHelpers)
+    wax.helpers(handlebarsLayouts)
     toArray(config.helpers).map(x => wax.helpers(`${x}/**/*.js`))
     toArray(config.data).map(x => wax.data(`${x}/**/*.{json,js}`))
     toArray(config.decorators).map(x => wax.decorators(`${x}/**/*.js`))

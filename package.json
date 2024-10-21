@@ -1,6 +1,6 @@
 {
   "name": "@partiellkorrekt/parcel-transformer-handlebars",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Handlebars Tranformer Plugin for Parcel",
   "main": "lib/HandlebarsTransformer.js",
   "author": "Abraham Przewodnik",
@@ -10,6 +10,7 @@
   },
   "scripts": {
     "start": "npx tsc --watch",
+    "lint": "tsc --noEmit && npx biome check",
     "build": "npx tsc"
   },
   "engines": {
@@ -21,20 +22,18 @@
   "dependencies": {
     "@parcel/plugin": "^2.6.2",
     "front-matter": "^4.0.2",
-    "glob": "^8.0.3",
+    "glob": "^11.0.0",
     "handlebars": "^4.7.7",
     "handlebars-helpers": "^0.10.0",
     "handlebars-layouts": "^3.1.4",
     "handlebars-wax": "^6.1.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@parcel/core": "^2.6.2",
-    "@types/glob": "^7.2.0",
-    "@types/node": "^18.6.2",
-    "@typescript-eslint/eslint-plugin": "^5.31.0",
-    "@typescript-eslint/parser": "^5.31.0",
-    "eslint": "^8.20.0",
-    "prettier": "^2.7.1",
-    "typescript": "^4.7.4"
-  }
+    "@types/glob": "^8.1.0",
+    "@types/node": "^22.7.7",
+    "typescript": "^5.6.3"
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

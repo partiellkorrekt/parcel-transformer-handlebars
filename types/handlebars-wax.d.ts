@@ -4,7 +4,7 @@ declare module 'handlebars-wax' {
     partials(dir: string): Wax
     decorators(dir: string): Wax
     data(dir: string): Wax
-    compile(template: string): ((data: unknown) => string)
+    compile(template: string): (data: unknown) => string
   }
 
   const handlebarsWax: (hbs: typeof Handlebars) => Wax
